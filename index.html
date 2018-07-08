@@ -294,7 +294,7 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-08T22:30:50+08:00">
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-08T22:36:26+08:00">
                 2018-07-08
               </time>
             
@@ -418,7 +418,6 @@ libgcc_s.so.1 =&gt; /lib64/libgcc_s.so.1 (0x00007f660c718000)
 libc.so.6 =&gt; /lib64/libc.so.6 (0x00007f660c356000)
 /lib64/ld-linux-x86-64.so.2 (0x00007f6613117000)
 </code></pre><p>可以看到这个so已经是自我包含的了，只依赖系统lib中的一些共享库，可以被直接使用<code>dlfcn.h</code>中的api来动态加载demo.so中的foo函数，并执行它。</p>
-<p>Done.</p>
 
           
         
@@ -696,7 +695,7 @@ libc.so.6 =&gt; /lib64/libc.so.6 (0x00007f660c356000)
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-count">4</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
