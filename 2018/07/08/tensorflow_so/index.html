@@ -87,7 +87,7 @@
 <meta property="og:site_name" content="LazyTimmy">
 <meta property="og:description" content="最近终于开始捣鼓Tensorflow了，好像动作总是比别人慢个几拍。 – 懒人timmy  背景是因为想在线上的Server端里面调用Tensorflow的API，比如加载预训练的模型对输入进行预测，或者线上实时调用一些特征处理的函数做特征变换。但是受当前开发环境的限制，把Server和Tensorflow放在一起编译肯定是无法做到的，两边的编译环境和依赖相差太大了，所以这里的想法是单独把Ten">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-07-08T07:38:26.000Z">
+<meta property="og:updated_time" content="2018-07-08T07:43:21.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Tensorflow入门记——用Bazel构建自己的Tensorflow应用(1)">
 <meta name="twitter:description" content="最近终于开始捣鼓Tensorflow了，好像动作总是比别人慢个几拍。 – 懒人timmy  背景是因为想在线上的Server端里面调用Tensorflow的API，比如加载预训练的模型对输入进行预测，或者线上实时调用一些特征处理的函数做特征变换。但是受当前开发环境的限制，把Server和Tensorflow放在一起编译肯定是无法做到的，两边的编译环境和依赖相差太大了，所以这里的想法是单独把Ten">
@@ -292,7 +292,7 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-08T15:38:37+08:00">
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-08T15:43:37+08:00">
                 2018-07-08
               </time>
             
@@ -368,7 +368,8 @@ $ git checkout r1.4
 #include &quot;tensorflow/cc/ops/standard_ops.h&quot;
 #include &quot;tensorflow/core/framework/tensor.h&quot;
 
-int main() {
+extern &quot;C&quot; void foo() 
+{
     using namespace tensorflow;
     using namespace tensorflow::ops;
     Scope root = Scope::NewRootScope();
@@ -384,7 +385,6 @@ int main() {
     TF_CHECK_OK(session.Run({v}, &amp;outputs));
     // Expect outputs[0] == [19; -3]
     std::cout&lt;&lt; outputs[0].matrix&lt;float&gt;();
-    return 0;
 }
 </code></pre><p>添加BUILD指令<code>tensorflow/demo/BUILD</code>，把demo编译为一个so文件</p>
 <pre><code>cc_binary(
