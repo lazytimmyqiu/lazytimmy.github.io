@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Notes, Mocha" />
+  <meta name="keywords" content="Tensorflow,SavedModel,C++," />
 
 
 
@@ -79,17 +79,18 @@
 
 
 
-<meta name="description" content="Don&apos;t expect too much">
-<meta name="keywords" content="emmm...">
-<meta property="og:type" content="website">
-<meta property="og:title" content="LazyTimmy">
-<meta property="og:url" content="http://lazytimmy.cn/index.html">
+<meta name="description" content="上一篇已经走通了Tensorflow C++ API的编译和打包流程，接下来就该做一些真正有用的工作了：在C++的server调用Tensorflow的API来加载在python环境中预训练好的模型和参数，对样本进行实时预测。我们现在就开始在Tensorflow的环境中编写供Server端调用的动态库代码和接口。 稍微构思一下，我们的动态库至少要提供以下四个接口：  模型的加载接口：用于一次性把模">
+<meta name="keywords" content="Tensorflow,SavedModel,C++">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Tensorflow入门记——在C++中使用SavedModelBundle加载模型">
+<meta property="og:url" content="http://lazytimmy.cn/2018/07/28/tensorflow_cpp/index.html">
 <meta property="og:site_name" content="LazyTimmy">
-<meta property="og:description" content="Don&apos;t expect too much">
+<meta property="og:description" content="上一篇已经走通了Tensorflow C++ API的编译和打包流程，接下来就该做一些真正有用的工作了：在C++的server调用Tensorflow的API来加载在python环境中预训练好的模型和参数，对样本进行实时预测。我们现在就开始在Tensorflow的环境中编写供Server端调用的动态库代码和接口。 稍微构思一下，我们的动态库至少要提供以下四个接口：  模型的加载接口：用于一次性把模">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-07-28T09:05:47.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="LazyTimmy">
-<meta name="twitter:description" content="Don&apos;t expect too much">
+<meta name="twitter:title" content="Tensorflow入门记——在C++中使用SavedModelBundle加载模型">
+<meta name="twitter:description" content="上一篇已经走通了Tensorflow C++ API的编译和打包流程，接下来就该做一些真正有用的工作了：在C++的server调用Tensorflow的API来加载在python环境中预训练好的模型和参数，对样本进行实时预测。我们现在就开始在Tensorflow的环境中编写供Server端调用的动态库代码和接口。 稍微构思一下，我们的动态库至少要提供以下四个接口：  模型的加载接口：用于一次性把模">
 
 
 
@@ -119,13 +120,13 @@
 
 
 
-  <link rel="canonical" href="http://lazytimmy.cn/"/>
+  <link rel="canonical" href="http://lazytimmy.cn/2018/07/28/tensorflow_cpp/"/>
 
 
 
 
 
-  <title>LazyTimmy</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  <title>Tensorflow入门记——在C++中使用SavedModelBundle加载模型 | LazyTimmy</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
   
 
 
@@ -144,8 +145,7 @@
     
   
 
-  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left 
-  page-home">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -248,9 +248,9 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
 
@@ -280,9 +280,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/07/28/tensorflow_cpp/" itemprop="url">Tensorflow入门记——在C++中使用SavedModelBundle加载模型</a></h1>
+          <h1 class="post-title" itemprop="name headline">Tensorflow入门记——在C++中使用SavedModelBundle加载模型</h1>
         
 
         <div class="post-meta">
@@ -332,9 +330,7 @@
       
 
       
-        
-          
-            <p>上一篇已经走通了Tensorflow C++ API的编译和打包流程，接下来就该做一些真正有用的工作了：在C++的server调用Tensorflow的API来加载在python环境中预训练好的模型和参数，对样本进行实时预测。我们现在就开始在Tensorflow的环境中编写供Server端调用的动态库代码和接口。</p>
+        <p>上一篇已经走通了Tensorflow C++ API的编译和打包流程，接下来就该做一些真正有用的工作了：在C++的server调用Tensorflow的API来加载在python环境中预训练好的模型和参数，对样本进行实时预测。我们现在就开始在Tensorflow的环境中编写供Server端调用的动态库代码和接口。</p>
 <p>稍微构思一下，我们的动态库至少要提供以下四个接口：</p>
 <ul>
 <li>模型的加载接口：用于一次性把模型加载到内存中</li>
@@ -363,8 +359,6 @@
 </ul>
 <p>其实如果把这份官方文档<a href="https://tensorflow.google.cn/guide/saved_model" target="_blank" rel="noopener">https://tensorflow.google.cn/guide/saved_model</a> 仔细看完就会发现上面的概念都有介绍，也能理解这一堆概念只是为了使得导出的模型能够做到平台和语言无关而已。多了一层抽象，但通用性却增加了很多。</p>
 
-          
-        
       
     </div>
     
@@ -379,396 +373,40 @@
 
     <footer class="post-footer">
       
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://lazytimmy.cn/2018/07/08/tensorflow_so/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Tian-Yu Qiu">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="LazyTimmy">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/07/08/tensorflow_so/" itemprop="url">Tensorflow入门记——用Bazel构建自己的Tensorflow应用</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-08T22:36:26+08:00">
-                2018-07-08
-              </time>
-            
-
-            
-
-            
-          </span>
-
+        <div class="post-tags">
           
-
+            <a href="/tags/Tensorflow/" rel="tag"># Tensorflow</a>
           
-            
+            <a href="/tags/SavedModel/" rel="tag"># SavedModel</a>
           
-
+            <a href="/tags/C/" rel="tag"># C++</a>
           
-          
-
-          
-
-          
-
-          
-
         </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <blockquote>
-<p>最近终于开始捣鼓Tensorflow了，好像动作总是比别人慢个几拍。 – 懒人timmy</p>
-</blockquote>
-<p>背景是因为想在线上的Server端里面调用Tensorflow的API，比如加载预训练的模型对输入进行预测，或者线上实时调用一些特征处理的函数做特征变换。但是受当前开发环境的限制，把Server和Tensorflow放在一起编译肯定是无法做到的，两边的编译环境和依赖相差太大了，所以这里的想法是单独把Tensorflow的功能部分编译成一个so，暴露出需要提供的接口，然后Sever端动态链接来进行调用。之前听人说各种踩坑，但自己过了一遍发现还是很简单的，并没有碰到什么不符合逻辑的坑爹状况，这里流程记录一下，便于之后参考。</p>
-<p>过程基本参考官网教程里的<a href="https://tensorflow.google.cn/install/install_sources" target="_blank" rel="noopener">源码编译</a>部分，编译环境为：</p>
-<ul>
-<li>一个基于Centos 7的Linux环境</li>
-<li>gcc 4.8.5</li>
-</ul>
-<h3 id="安装Bazel"><a href="#安装Bazel" class="headerlink" title="安装Bazel"></a>安装Bazel</h3><p><a href="https://docs.bazel.build/versions/master/bazel-overview.html" target="_blank" rel="noopener">Bazel</a>是Google内部开源的一套编译、构建、测试的工具，类似于make和maven，之后会使用它来编译tensorflow代码。这里直接下载bazel的二进制包来安装会比较方便</p>
-<pre><code>#根据当前系统环境安装缺少的依赖，不同环境缺少的依赖可能不同
-$ sudo apt-get install pkg-config zip g++ zlib1g-dev unzip python
-
-$ wget https://github.com/bazelbuild/bazel/releases/download/0.15.0/bazel-0.15.0-installer-linux-x86_64.sh
-
-$ chmod +x bazel-0.15.0-installer-linux-x86_64.sh
-
-$ ./bazel-0.15.0-installer-linux-x86_64.sh --user
-</code></pre><h3 id="编译tensorflow"><a href="#编译tensorflow" class="headerlink" title="编译tensorflow"></a>编译tensorflow</h3><pre><code>$ git clone https://github.com/tensorflow/tensorflow 
-</code></pre><p>可以checkout到不同的branch，这里我选择了一个之前的1.4版本做测试</p>
-<pre><code>$ cd tensorflow
-$ git checkout r1.4
-</code></pre><p>配置编译选项</p>
-<pre><code>$ ./configure
-</code></pre><p>这一步必不可少，具体选项根据需要选择即可，配置成功后就可以开始编译了。如果要安装tensorflow的,可以先编译pip软件包</p>
-<pre><code>$ bazel build --config=opt //tensorflow/tools/pip_package:build_pip_package
-</code></pre><p>由于我们这里并不需要安装tensorflow，所以这一步是可选的，不过编译自己的tensorflow应用和这个是类似的操作，只不过需要自己配置一下编译的依赖和目标而已，和写Makefile一样。稍微解释一下这个编译命令：</p>
-<ul>
-<li>–config=opt 是配置编译的优化选项，opt表示尽可能优化，还有其他的选项，比如fastbuild是快速编译</li>
-<li>//tensorflow/tools/pip_package:build_pip_package用于标识具体的构建目标。pip_package是包名称， build_pip_package是这个包里面的一个target，//tensorflow/tools/是这个package相对于bazel workspace目录的位置，也就是有WORKSPACE这个文件的项目根目录。所以这个命令的含义就是到tensorflow/tools/pip_package这个目录下找到BUILD文件，然后找到build_pip_package这个target，构建它</li>
-</ul>
-<p>到这里就大致搞清楚build tensorflow的流程了，我们现在开始编写和构建自己的代码。首选，在workspace里创建自己的目录</p>
-<pre><code>$ mkdir tensorflow/demo
-</code></pre><p>从网上找了一份测试代码放在<code>tensorflow/demo/demo.cc</code></p>
-<pre><code>#include &quot;tensorflow/cc/client/client_session.h&quot;
-#include &quot;tensorflow/cc/ops/standard_ops.h&quot;
-#include &quot;tensorflow/core/framework/tensor.h&quot;
-
-extern &quot;C&quot; void foo() 
-{
-    using namespace tensorflow;
-    using namespace tensorflow::ops;
-    Scope root = Scope::NewRootScope();
-    // Matrix A = [3 2; -1 0]
-    auto A = Const(root, { {3.f, 2.f}, {-1.f, 0.f}});
-    // Vector b = [3 5]
-    auto b = Const(root, { {3.f, 5.f}});
-    // v = Ab^T
-    auto v = MatMul(root.WithOpName(&quot;v&quot;), A, b, MatMul::TransposeB(true));
-    std::vector&lt;Tensor&gt; outputs;
-    ClientSession session(root);
-    // Run and fetch v
-    TF_CHECK_OK(session.Run({v}, &amp;outputs));
-    // Expect outputs[0] == [19; -3]
-    std::cout&lt;&lt; outputs[0].matrix&lt;float&gt;();
-}
-</code></pre><p>添加BUILD指令<code>tensorflow/demo/BUILD</code>，把demo编译为一个so文件</p>
-<pre><code>cc_binary(
-  name = &quot;demo.so&quot;,
-  srcs = [&quot;demo.cc&quot;],
-  linkshared = True,
-  deps = [
-      &quot;//tensorflow/cc:cc_ops&quot;,
-      &quot;//tensorflow/cc:client_session&quot;,
-      &quot;//tensorflow/core:framework&quot;,
-      &quot;//tensorflow/core:tensorflow&quot;,
-  ],
-)
-</code></pre><p>退回到workspace目录，运行构建命令</p>
-<pre><code>$ bazel build -c opt  //tensorflow/demo:demo.so --config=monolithic
-</code></pre><p>注意这里的–config=monolithic，加了这个表示我们要把依赖的库以静态的方式链接进来，否则其他程序调用还需要链接libtensorflow_framework.so这个动态库，不过这样的代价是so会更大一些。</p>
-<p>bazel的编译是out of source tree的，所有生成的文件都会在bazel-bin下面对应的目录里，比如我们的demo.so被放在bazel-bin/tensorflow/demo/</p>
-<p>把这个so放在Server运行的环境上, ldd看一下这个so的依赖情况</p>
-<pre><code>$ ldd -r bazel-bin/tensorflow/demo/demo.so
-linux-vdso.so.1 =&gt;  (0x00007ffe5b9df000)
-/$LIB/libonion.so =&gt; /lib64/libonion.so (0x00007f661322e000)
-libdl.so.2 =&gt; /lib64/libdl.so.2 (0x00007f660d154000)
-libpthread.so.0 =&gt; /lib64/libpthread.so.0 (0x00007f660cf38000)
-libm.so.6 =&gt; /lib64/libm.so.6 (0x00007f660cc36000)
-libstdc++.so.6 =&gt; /lib64/libstdc++.so.6 (0x00007f660c92e000)
-libgcc_s.so.1 =&gt; /lib64/libgcc_s.so.1 (0x00007f660c718000)
-libc.so.6 =&gt; /lib64/libc.so.6 (0x00007f660c356000)
-/lib64/ld-linux-x86-64.so.2 (0x00007f6613117000)
-</code></pre><p>可以看到这个so已经是自我包含的了，只依赖系统lib中的一些共享库，可以被直接使用<code>dlfcn.h</code>中的api来动态加载demo.so中的foo函数，并执行它。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
       
 
       
       
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
       
 
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://lazytimmy.cn/2018/04/01/Why_Reinforment_Learning/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Tian-Yu Qiu">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="LazyTimmy">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/04/01/Why_Reinforment_Learning/" itemprop="url">Why Reinforcement Learning(1)</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
             
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-01T23:33:11+08:00">
-                2018-04-01
-              </time>
+              <a href="/2018/07/08/tensorflow_so/" rel="next" title="Tensorflow入门记——用Bazel构建自己的Tensorflow应用">
+                <i class="fa fa-chevron-left"></i> Tensorflow入门记——用Bazel构建自己的Tensorflow应用
+              </a>
             
+          </div>
 
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
             
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
+          </div>
         </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
       
 
       
-        
-          
-            <p>前些日子看了一段时间的强化学习，主要是Sutton那本书《<a href="http://incompleteideas.net/book/bookdraft2017nov5.pdf" target="_blank" rel="noopener">Reinforcement Learning: An Introduction</a>》和David Silver的<a href="https://www.youtube.com/watch?v=2pWv7GOvuf0&amp;t=1s" target="_blank" rel="noopener">强化学习课程</a>。我会坚持在这个Blog里写一些学习笔记和对强化学习的一些思考。</p>
-<p>这篇文章是我对于强化学习问题本身的一些思考过程，主要是关于以下几个问题，今天只讨论第一个问题。</p>
-<ul>
-<li><strong>强化学习和监督学习都有一定的监督信息存在，它们本质的区别是什么</strong></li>
-<li>我在工作(构造推荐系统)中使用它的动机和期望是什么</li>
-</ul>
-<p>这几个问题从我接触强化学习的一开始就扰着我。虽然从基本的定义和描述问题本身的方式来看，<em>RL</em>和监督学习似乎用的是完全不同的语言，但仔细思考之后发现并没有这么简单，在某种程度上它们似乎在说一件类似的事情。那么弄清楚它们本质的不同就很重要了，否则我无法说服自己，也无法说服别人为什么要在某个问题上应用强化学习，而不是已经有很多成功经验的监督学习方法。</p>
-<h2 id="强化学习和监督学习的区别"><a href="#强化学习和监督学习的区别" class="headerlink" title="强化学习和监督学习的区别"></a>强化学习和监督学习的区别</h2><p>强化学习和监督学习和其它学习问题一样，最终目标都是在给定某种输入(feature/state)的情况下，根据某种评价准则(loss function/return function)，做出某种输出(Prediction/Decision)。</p>
-<p>先回忆一下<strong>监督学习</strong>问题，它可以被概括为一个七元组$\left\langle \mathcal{X}, \mathcal{Y}, \mathcal{f}, \mathcal{P}, \mathcal{S}, \mathcal{H}, \mathcal{L} \right\rangle$</p>
-<blockquote>
-<ul>
-<li>$\mathcal{X}$是问题的输入域</li>
-<li>$\mathcal{Y}$是问题的输出域</li>
-<li>$f: \mathbb{R}^p \rightarrow \mathbb{R}^q$ 是$X$和$Y$之间未知的映射关系，这是我们希望学习的目标，也是监督信息的来源。</li>
-<li>$\mathcal{P}: \mathcal{X}\times \mathcal{Y} \rightarrow [0, 1]$ 是$(X, Y)$的联合概率密度函数，而且我们无法直接获取$\mathcal{P}(\textbf{x}, \textbf{y})$。</li>
-<li>$\mathcal{S}=\{(\textbf{x}_i, \textbf{y}_i)\}_{i=1}^n \sim \mathcal{P}$ 是一组抽样得到的训练样本，所有关于$f$的信息都从这获得</li>
-<li>$\mathcal{H}$ 是一个函数簇, 比如所有关于$X$的线性函数$$\mathcal{H}=\{h(\textbf{x}) = \textbf{W}\textbf{x} + \textbf{b} | \textbf{W} \in R^{q\times p}, \textbf{b} \in R^q\}$$这是我们的假设空间，我们希望从这个空间中找到一个$h$来近似目标函数$f$，从而能够进行预测$$\hat{\textbf{y}}=h(\textbf{x})$$</li>
-<li>$\mathcal{L}_{\mathcal{P}}(f, h)$ 是一个损失函数，用来度量某个假设$h$在未知样本上的表现。</li>
-</ul>
-</blockquote>
-<p>由于$\mathcal{P}$和$f$的未知性，所以我们通常用样本上的损失函数$\mathcal{L}_{S}(h)$来近似，这就是经验风险最小化(Empirical Risk Minimization)<br>$$h^*\in \mathrm{argmin}_h \mathcal{L}_S (h)$$统计机器学习的理论告诉我们在一些条件下，ERM能够保证一个合理的解，并且解的精确程度和假设空间的复杂度以及样本的个数有关。</p>
-<p><strong>强化学习</strong>问题本质上是一个马尔科夫决策过程(MDP)，也可以用一个五元组来总结$\left\langle \mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}, \gamma \right\rangle$</p>
-<blockquote>
-<ul>
-<li>$\mathcal{S}$: 状态集合</li>
-<li>$\mathcal{A}$: 动作集合</li>
-<li>$\mathcal{R}: \mathcal{S}\times \mathcal{A} \rightarrow \mathbb{R}$ 是一个随机的奖励函数</li>
-<li>$\mathcal{P}: \mathcal{S}\times \mathcal{A}\times \mathcal{R}\times \mathcal{S} \rightarrow [0, 1]$ 是控制整个MDP状态转移，奖励分配的概率密度函数$\mathcal{P}(s’, r, s, a) := \mathrm{Pr}\left(s’, r|s, a\right)$，它实际上决定了整个MDP的动力学特性</li>
-<li>$\gamma \in [0, 1]$ 是一个discounting factor，调整它可以使得模型更偏向短期还是长期的奖励</li>
-</ul>
-</blockquote>
-<p>作为学习者的agent通过自身的策略函数$\pi(s, a) := \mathrm{Pr}\left( a|s \right),s \in \mathcal{S}, a \in \mathcal{A}$与环境进行交互，根据当前的状态$s$选择某个动作$a$。受到agent的action所影响，环境的状态会发生转移，得到一个新的状态$s’$，也相应返回一个奖励值信号$r$给agent，这个过程实际上就是环境根据当前的状态和agent动作，从$\mathcal{P}$进行了一次采样。</p>
-<p>在这个交互的过程中，强化学习的目标是学习出最优的策略函数$\pi(s, a)$使得在任何时刻$t$, 遵循该策略能够使得回报函数的期望最大化，$$\begin{aligned}<br>q_{\pi}(s, a) &amp;= \mathbb{E}_{\pi}\left[ G_t | S_t=s, A_t=a \right]\\<br>&amp;= \mathrm{max}_\pi \mathbb{E}_{\pi}\left[ G_t | S_t=s, A_t=a \right]<br>\end{aligned}$$<br>其中$G_t = \sum_{k=0}^T \gamma^{k}R_{t+k+1}$，是从t时刻之后agent能够获得的累计奖励(discounting之后)，注意这是一个随机变量，它的取值与$\mathcal{P}$以及在过程中的一系列决策有关。</p>
-<p>初看似乎两者的区别非常明显，但其实很多概念还是类似的：</p>
-<ul>
-<li>$\mathcal{X}$对应$\mathcal{S}$，都是问题的输入域</li>
-<li>$\mathcal{H}$对应$\mathcal{A}$，本质上都是learner可探索的所有可能性</li>
-<li>两个问题中的$\mathcal{P}$，都决定了不同输入时，输出的概率分布</li>
-</ul>
-<p>那么我们来看剩下的元素对比：</p>
-<ul>
-<li>监督学习中有明确的训练样本概念，$\mathcal{S}$抽样自$\mathcal{P}$，而强化学习中好像没有提到这个，那么是不是可以说</li>
-</ul>
-<blockquote>
-<p><em>RL没有现成的训练数据，需要与环境进行交互来获取数据进行学习，而监督学习需要提前准备好训练样本，然后喂给learner/agent。</em></p>
-</blockquote>
-<p>但是细想一下，这并不成立，因为监督学习也有online learning的情况，比如FTRL算法，用Regret值作为Loss function，在线预测然后接受反馈调整参数，然后再接受下一个样本。这意味着监督学习也可以在与环境进行交互的情况下学习。</p>
-<h3 id="Affecting-the-future"><a href="#Affecting-the-future" class="headerlink" title="Affecting the future"></a>Affecting the future</h3><p>所以交互式学习并不是强化学习独有的，但是在交互的过程中，强化学习能够影响环境：</p>
-<blockquote>
-<p><strong>RL能够通过决策影响环境，从而影响后续的样本和奖励分布</strong></p>
-</blockquote>
-<p>假设是一个在线广告推荐的系统，FTRL算法通过实时预测计算出了广告的排序之后推荐给用户，这不仅会影响用户当前是否会点击还是跳过这个广告，实际上还会影响到用户的体验状态，进而导致他之后可能会看更多的广告或者是马上关闭程序，从而影响后续接受到的样本情况。这种情况是监督学习所没有考虑的，其始终假设下一个到来的样本对$(\textbf{x}, \textbf{y}) \sim \mathcal{P}$，也就是服从相同的概率分布。而强化学习通过状态空间$\mathcal{S}$和状态间的转移概率来直接建模这种情形，因此是一个更适合于序列式决策的方法。</p>
-<h3 id="Rewards-vs-Answers"><a href="#Rewards-vs-Answers" class="headerlink" title="Rewards vs. Answers"></a>Rewards vs. Answers</h3><blockquote>
-<p><strong>监督学习的监督信息是其可以得到正确的输出，而强化学习只有一个具有指导意义的奖励信号</strong></p>
-</blockquote>
-<p>首先，可以肯定的是，完备的监督信息和足够的样本一定会比人工设计的奖励函数更具有指导意义。因此，这种奖励信号的模式并不是对现有监督学习的优化，而是适用于无法得到充分的，具有代表性的训练样本时的妥协，但同时，其特殊的结构又使得它可以解决监督学习无法处理的问题。</p>
-<p>比如，在学习下围棋这个问题上，围棋棋盘上的可能状态实在太多，找到足够多且具有泛化性质的数据样本非常困难；此外，在下围棋的过程中，我们只能在围棋的结尾给出胜利或者失败的标签，即使是围棋大师也无法为中间的每一个步骤贴上正确或者失败的标签。一场围棋比赛的结果是中间的所有决策以及环境(对手)的反馈共同导致的，无法把胜利和失败的标签和单一的决策进行关联。因此，在这种学习场景下，奖励信号是更好的选择。</p>
-<h3 id="Exploitation-and-Exploration"><a href="#Exploitation-and-Exploration" class="headerlink" title="Exploitation and Exploration"></a>Exploitation and Exploration</h3><blockquote>
-<p><strong>当前最优并不是长期最优</strong></p>
-</blockquote>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
       
     </footer>
   </div>
@@ -778,10 +416,11 @@ libc.so.6 =&gt; /lib64/libc.so.6 (0x00007f660c356000)
   </article>
 
 
-    
-  </section>
 
-  
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -789,6 +428,10 @@ libc.so.6 =&gt; /lib64/libc.so.6 (0x00007f660c356000)
 
 
           
+
+  
+
+
 
         </div>
         
@@ -809,8 +452,17 @@ libc.so.6 =&gt; /lib64/libc.so.6 (0x00007f660c356000)
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -865,6 +517,22 @@ libc.so.6 =&gt; /lib64/libc.so.6 (0x00007f660c356000)
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#接口部分"><span class="nav-number">1.</span> <span class="nav-text">接口部分</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#C-API调用部分-TFModel-h"><span class="nav-number">2.</span> <span class="nav-text">C++ API调用部分: TFModel.h</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#接口实现"><span class="nav-number">3.</span> <span class="nav-text">接口实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -998,6 +666,10 @@ libc.so.6 =&gt; /lib64/libc.so.6 (0x00007f660c356000)
   
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
 
   
 
